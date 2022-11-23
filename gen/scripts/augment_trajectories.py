@@ -59,21 +59,22 @@ def save_image(event, save_path):
     rgb_save_path = os.path.join(save_path, HIGH_RES_IMAGES_FOLDER)
     rgb_image = event.frame[:, :, ::-1]
 
-    # depth
-    depth_save_path = os.path.join(save_path, DEPTH_IMAGES_FOLDER)
-    depth_image = event.depth_frame
-    depth_image = depth_image * (255 / 10000)
-    depth_image = depth_image.astype(np.uint8)
-
-    # masks
-    mask_save_path = os.path.join(save_path, INSTANCE_MASKS_FOLDER)
-    mask_image = event.instance_segmentation_frame
-
-    # dump images
     im_ind = get_image_index(rgb_save_path)
     cv2.imwrite(rgb_save_path + '/%09d.png' % im_ind, rgb_image)
-    cv2.imwrite(depth_save_path + '/%09d.png' % im_ind, depth_image)
-    cv2.imwrite(mask_save_path + '/%09d.png' % im_ind, mask_image)
+
+    # depth
+    if args.depth:
+        depth_save_path = os.path.join(save_path, DEPTH_IMAGES_FOLDER)
+        depth_image = event.depth_frame
+        depth_image = depth_image * (255 / 5000) # AI2THOR max distance 5m
+        depth_image = depth_image.astype(np.uint8)
+        cv2.imwrite(depth_save_path + '/%09d.png' % im_ind, depth_image)
+
+    # masks
+    if args.seg_masks:
+        mask_save_path = os.path.join(save_path, INSTANCE_MASKS_FOLDER)
+        mask_image = event.instance_segmentation_frame
+        cv2.imwrite(mask_save_path + '/%09d.png' % im_ind, mask_image)
 
     return im_ind
 
@@ -231,9 +232,10 @@ def augment_traj(env, json_file):
         json.dump(augmented_traj_data, aj, sort_keys=True, indent=4)
 
     # save video
-    images_path = os.path.join(high_res_images_dir, '*.png')
-    video_save_path = os.path.join(high_res_images_dir, 'high_res_video.mp4')
-    video_saver.save(images_path, video_save_path)
+    if args.video:
+        images_path = os.path.join(high_res_images_dir, '*.png')
+        video_save_path = os.path.join(high_res_images_dir, 'high_res_video.mp4')
+        video_saver.save(images_path, video_save_path)
 
     # check if number of new images is the same as the number of original images
     if args.smooth_nav and args.time_delays:
@@ -289,7 +291,15 @@ parser.add_argument('--time_delays', dest='time_delays', action='store_true')
 parser.add_argument('--shuffle', dest='shuffle', action='store_true')
 parser.add_argument('--num_threads', type=int, default=1)
 parser.add_argument('--reward_config', type=str, default='../models/config/rewards.json')
+parser.add_argument('--depth', action='store_true')
+parser.add_argument('--seg_masks', action='store_true')
+parser.add_argument('--instance_masks', action='store_true')
+parser.add_argument('--video', action='store_true')
 args = parser.parse_args()
+
+render_settings['renderDepthImage'] = args.depth
+render_settings['renderObjectImage'] = args.seg_masks
+render_settings['renderClassImage'] = args.instance_masks
 
 # make a list of all the traj_data json files
 for dir_name, subdir_list, file_list in walklevel(args.data_path, level=3):

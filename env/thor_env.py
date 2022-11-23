@@ -16,6 +16,9 @@ DEFAULT_RENDER_SETTINGS = {'renderImage': True,
                            'renderObjectImage': False,
                            }
 
+def noop(self):
+    pass
+
 class ThorEnv(Controller):
     '''
     an extension of ai2thor.controller.Controller for ALFRED tasks
@@ -28,6 +31,11 @@ class ThorEnv(Controller):
 
         super().__init__(quality=quality)
         self.local_executable_path = build_path
+        
+        Controller.lock_release = noop
+        Controller.unlock_release = noop
+        Controller.prune_releases = noop
+        
         self.start(x_display=x_display,
                    player_screen_height=player_screen_height,
                    player_screen_width=player_screen_width)

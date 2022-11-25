@@ -123,7 +123,7 @@ def augment_traj(env, json_file):
     env.restore_scene(object_poses, object_toggles, dirty_and_empty)
 
     env.step(dict(traj_data['scene']['init_action']))
-    print("Task: %s" % (traj_data['template']['task_desc']))
+    # print("Task: %s" % (traj_data['template']['task_desc']))
 
     # setup task
     env.set_task(traj_data, args, reward_type='dense')
@@ -298,8 +298,8 @@ parser.add_argument('--video', action='store_true')
 args = parser.parse_args()
 
 render_settings['renderDepthImage'] = args.depth
-render_settings['renderObjectImage'] = args.seg_masks
-render_settings['renderClassImage'] = args.instance_masks
+render_settings['renderObjectImage'] = args.instance_masks
+render_settings['renderClassImage'] = args.seg_masks
 
 # make a list of all the traj_data json files
 for dir_name, subdir_list, file_list in walklevel(args.data_path, level=3):
